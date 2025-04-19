@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="de" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Job Ergebnis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-white dark:bg-gray-900 text-gray-900 dark:text-white">
+    <div class="container mx-auto p-4">
+      <h1 class="text-2xl font-bold mb-4">Anonymisierter Text</h1>
+      <p><strong></strong></p>
+      {% if output_text %}
+      <h2 class="mt-4 font-semibold">Anonymisierter Text:</h2>
+      <pre class="p-4 bg-gray-100 dark:bg-gray-800 rounded whitespace-pre-wrap">{{ output_text }}</pre>
+      
+      <div class="mt-6">
+        <h3 class="font-semibold">Hinweis:</h3>
+        <p class="text-sm mt-2">
+          Sensible Daten wurden durch Codes ersetzt. Beispiel: <code class="bg-gray-200 dark:bg-gray-700 px-1 rounded">FN_a1b2c3d4</code> (FN = First Name)
+        </p>
+      </div>
+      {% else %}
+      <p>Der Text wird noch verarbeitet. Die Seite wird automatisch aktualisiert, sobald das Ergebnis verfügbar ist.</p>
+      <script>
+        // Automatisches Neuladen der Seite alle 5 Sekunden, wenn kein Ergebnis vorhanden ist
+        setTimeout(function() {
+          window.location.reload();
+        }, 5000);
+      </script>
+      {% endif %}
+      <a href="/" class="mt-4 inline-block text-blue-600 hover:underline">Zurück zum Upload</a>
+    </div>
+  </body>
+</html>
