@@ -1,0 +1,28 @@
+# Core Web Framework
+Flask==2.0.1
+Werkzeug==2.0.1
+Jinja2==3.0.1
+MarkupSafe==2.1.3  # Updated for Python 3.12 compatibility
+itsdangerous==2.0.0
+click==8.0.1
+
+# HTTP Requests
+requests==2.28.2
+
+# Utility progress bar
+tqdm
+
+# General Utilities
+numpy==1.26.4  # Updated for Python 3.12 compatibility
+json5
+Faker
+gunicorn
+langdetect==1.0.9
+
+# Build dependencies for Python 3.12
+setuptools>=65.5.0
+wheel
+
+# PDF and DOCX Generation
+reportlab==4.4.1
+python-docx==1.1.2

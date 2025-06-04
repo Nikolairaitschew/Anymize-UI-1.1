@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>anymize.ai | Dokument anonymisieren</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; background-color: #fafafa; }
+        .upload-container { border: 1px solid rgba(20,20,20,0.08); border-radius: 0.75rem; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+        #drop-zone.highlight { border-color: #000 !important; background-color: #f3f4f6 !important; }
+        /* Remove default focus outline on hidden file input */
+        #file-input { outline: none; }
+        #drop-zone input:focus-visible { outline: none; }
+        .tab-active { 
+            background-color: #000 !important; 
+            color: #fff !important;
+            border: 2px solid #000 !important;
+            box-shadow: 0 0 0 2px #000 !important;
+        }
+        .tabs-boxed {
+            background-color: #f3f4f6 !important;
+        }
+        .tab {
+            background-color: transparent !important;
+            color: #000 !important;
+            border: 2px solid transparent !important;
+            transition: all 0.2s ease !important;
+        }
+        .tab:hover:not(.tab-active) {
+            background-color: #e5e7eb !important;
+            border-color: #d1d5db !important;
+        }
+        .textarea {
+            background-color: #fff !important;
+            border-color: #d1d5db !important;
+        }
+        .textarea:focus {
+            border-color: #000 !important;
+            outline: 2px solid transparent !important;
+            outline-offset: 2px !important;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.1) !important;
+        }
+        .tab-content {
+            min-height: 300px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col pb-16">
+    <!-- Navigation -->
+    <nav class="bg-white border-b border-gray-200">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="flex h-16 items-center justify-between">
+                <div class="flex items-center">
+                    <img src="{{ url_for('static', filename='anymize-logo.svg') }}" alt="anymize.ai" class="h-8">
+                </div>
+                <div class="flex items-center space-x-4">
+                    {% if current_user %}
+                        <span class="text-sm text-gray-600">{{ current_user.email }}</span>
+                    {% endif %}
+                    <a href="{{ url_for('auth_logout') }}" class="text-sm font-medium text-gray-700 hover:text-black">Abmelden</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="flex-1 flex items-center justify-center p-6">
+        <div class="upload-container bg-white max-w-xl w-full p-6">
+            <header class="text-center mb-6">
+                <img src="{{ url_for('static', filename='anymize-logo.svg') }}" alt="anymize.ai" class="h-10 mx-auto my-3">
+                <p class="text-gray-700 mt-1">KI-gestützte Anonymisierung sensibler Daten</p>
+            </header>
+        
+            <!-- Tab Navigation -->
+            <div class="tabs tabs-boxed mb-6" style="background-color: #f3f4f6;">
+                <button class="tab tab-active" id="file-tab" onclick="switchTab('file')" style="background-color: #000; color: #fff; border: 2px solid #000;">Datei hochladen</button>
+                <button class="tab" id="text-tab" onclick="switchTab('text')" style="border: 2px solid transparent;">Text eingeben</button>
+            </div>
+
+            <!-- File Upload Tab Content -->
+            <div id="file-content" class="tab-content" style="display: block;">
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold mb-2">Datei hochladen</h2>
+                    <p class="text-gray-600 text-sm mb-4">Laden Sie ein Dokument hoch, um sensible personenbezogene Daten automatisch zu anonymisieren. Auch Screenshots aus Ihrem Zwischenspeicher können hochgeladen werden.</p>
+                    <label id="drop-zone" for="file-input" class="block w-full bg-white border-dashed border-gray-300 hover:border-gray-400 hover:ring-2 hover:ring-gray-300 rounded-lg p-8 text-center cursor-pointer hover:bg-gray-50 transition-all duration-200 relative">
+                        <input type="file" id="file-input" name="file" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept=".pdf,.docx,.txt,.doc" />
+                        <div class="w-12 h-12 mx-auto mb-4 bg-black text-white rounded-full flex items-center justify-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                            </svg>
+                        </div>
+                        <div class="font-medium mb-2">Klicken Sie hier um eine Datei auszuwählen</div>
+                        <div class="text-sm text-gray-500">oder ziehen Sie eine Datei hierher</div>
+                        <div class="text-xs text-gray-400 mt-2">Tipp: Sie können auch Strg+V drücken, um eine Datei einzufügen</div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Text Input Tab Content -->
+            <div id="text-content" class="tab-content" style="display: none;">
+                <div class="mb-6">
+                    <h2 class="text-xl font-semibold mb-2">Text direkt eingeben</h2>
+                    <p class="text-gray-600 text-sm mb-4">Fügen Sie Ihren Text direkt ein, um sensible personenbezogene Daten automatisch zu anonymisieren.</p>
+                    <div class="form-control">
+                        <textarea 
+                            id="raw-text-input"
+                            class="textarea textarea-bordered h-48 w-full bg-white border-gray-300 focus:border-black focus:ring-2 focus:ring-gray-300"
+                            placeholder="Fügen Sie hier Ihren Text ein..."
+                        ></textarea>
+                        <label class="label">
+                            <span class="label-text-alt text-gray-500">Der Text wird automatisch analysiert und anonymisiert</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <h3 class="font-medium mb-2">So einfach ist es!</h3>
+                <ol class="space-y-3">
+                    <li class="flex gap-3">
+                        <div class="w-6 h-6 bg-black text-white rounded-full flex items-center justify-center text-sm font-medium">1</div>
+                        <div class="text-sm text-gray-600">Laden Sie eine Datei mit Textinhalt hoch</div>
+                    </li>
+                    <li class="flex gap-3">
+                        <div class="w-6 h-6 bg-black text-white rounded-full flex items-center justify-center text-sm font-medium">2</div>
+                        <div class="text-sm text-gray-600">Unser KI-gestütztes System extrahiert alle sensiblen Daten</div>
+                    </li>
+                    <li class="flex gap-3">
+                        <div class="w-6 h-6 bg-black text-white rounded-full flex items-center justify-center text-sm font-medium">3</div>
+                        <div class="text-sm text-gray-600">Alle sensiblen Informationen werden mit Codes ersetzt</div>
+                    </li>
+                    <li class="flex gap-3">
+                        <div class="w-6 h-6 bg-black text-white rounded-full flex items-center justify-center text-sm font-medium">4</div>
+                        <div class="text-sm text-gray-600">Sie erhalten den anonymisierten Text</div>
+                    </li>
+                </ol>
+            </div>
+        
+            <!-- Upload Button for File -->
+            <button id="upload-btn" class="w-full py-2.5 px-4 bg-black hover:bg-black/90 text-white font-medium rounded text-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed" style="display: none;">Hochladen und anonymisieren</button>
+        
+            <!-- Process Button for Text -->
+            <button id="process-text-btn" class="w-full py-2.5 px-4 bg-black hover:bg-black/90 text-white font-medium rounded text-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed" style="display: none;">Text anonymisieren</button>
+        
+            <div class="text-sm text-gray-600 mt-4 flex items-center justify-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+                </svg>
+                <span>DSGVO-konform</span><span class="mx-1">•</span><span>Maximale Sicherheit</span>
+            </div>
+        </div>
+    </div>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const uploadBtn = document.getElementById('upload-btn');
+        const rawTextInput = document.getElementById('raw-text-input');
+        const processTextBtn = document.getElementById('process-text-btn');
+        
+        ['dragenter','dragover','dragleave','drop'].forEach(evt => {
+            dropZone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); });
+            document.body.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); });
+        });
+        ['dragenter','dragover'].forEach(evt => dropZone.addEventListener(evt, () => dropZone.classList.add('highlight')));
+        ['dragleave','drop'].forEach(evt => dropZone.addEventListener(evt, () => dropZone.classList.remove('highlight')));
+        dropZone.addEventListener('drop', e => handleFiles({ target: { files: e.dataTransfer.files } }));
+        fileInput.addEventListener('change', handleFiles);
+        uploadBtn.addEventListener('click', submitForm);
+        
+        // Text input handling
+        rawTextInput.addEventListener('input', function() {
+            const hasText = this.value.trim().length > 0;
+            processTextBtn.style.display = hasText ? 'block' : 'none';
+            processTextBtn.disabled = !hasText;
+        });
+        
+        processTextBtn.addEventListener('click', submitText);
+        
+        // Tab switching
+        window.switchTab = function(tab) {
+            const fileTab = document.getElementById('file-tab');
+            const textTab = document.getElementById('text-tab');
+            const fileContent = document.getElementById('file-content');
+            const textContent = document.getElementById('text-content');
+            
+            // Reset styles
+            fileTab.style.backgroundColor = '';
+            fileTab.style.color = '';
+            textTab.style.backgroundColor = '';
+            textTab.style.color = '';
+            
+            if (tab === 'file') {
+                fileTab.classList.add('tab-active');
+                fileTab.style.backgroundColor = '#000';
+                fileTab.style.color = '#fff';
+                fileTab.style.border = '2px solid #000';
+                textTab.classList.remove('tab-active');
+                textTab.style.border = '2px solid transparent';
+                fileContent.style.display = 'block';
+                textContent.style.display = 'none';
+                uploadBtn.style.display = fileInput.files.length > 0 ? 'block' : 'none';
+                processTextBtn.style.display = 'none';
+            } else {
+                textTab.classList.add('tab-active');
+                textTab.style.backgroundColor = '#000';
+                textTab.style.color = '#fff';
+                textTab.style.border = '2px solid #000';
+                fileTab.classList.remove('tab-active');
+                fileTab.style.border = '2px solid transparent';
+                textContent.style.display = 'block';
+                fileContent.style.display = 'none';
+                processTextBtn.style.display = rawTextInput.value.trim().length > 0 ? 'block' : 'none';
+                uploadBtn.style.display = 'none';
+            }
+        };
+        
+        function handleFiles(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const ext = file.name.split('.').pop().toLowerCase();
+            if (!['pdf','docx','txt','doc'].includes(ext)) { alert('Bitte gültiges Format wählen'); fileInput.value=''; return; }
+            
+            const dropZone = document.getElementById('drop-zone');
+            const uploadIcon = dropZone.querySelector('.w-12');
+            const uploadTextPrimary = dropZone.querySelector('.font-medium');
+            const uploadTextSecondary = dropZone.querySelector('.text-sm.text-gray-500');
+            
+            uploadIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+            uploadTextPrimary.textContent = 'Ausgewählt: ' + file.name;
+            uploadTextSecondary.textContent = 'Bereit zum Hochladen';
+            dropZone.style.borderColor = '#3b82f6';
+            dropZone.style.borderWidth = '2px';
+            dropZone.style.borderStyle = 'solid';
+            
+            uploadBtn.style.display = 'block';
+            uploadBtn.disabled = false;
+            // Store the file for drag-and-drop scenarios
+            fileInput._droppedFile = file;
+        }
+        
+        function submitForm() {
+            const form = document.createElement('form');
+            form.method = 'POST'; 
+            form.action = '/upload'; 
+            form.enctype = 'multipart/form-data';
+            
+            // Create a new file input
+            const newInput = document.createElement('input');
+            newInput.type = 'file';
+            newInput.name = 'file';
+            newInput.style.display = 'none';
+            
+            // Check if we have a dropped file or regular file
+            const file = fileInput._droppedFile || fileInput.files[0];
+            
+            if (file) {
+                // Create a DataTransfer object to set the file
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                newInput.files = dataTransfer.files;
+            }
+            
+            form.appendChild(newInput);
+            uploadBtn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>Verarbeite…';
+            uploadBtn.disabled = true; 
+            document.body.appendChild(form); 
+            form.submit();
+        }
+        
+        function submitText() {
+            const text = rawTextInput.value.trim();
+            if (!text) {
+                alert('Bitte geben Sie einen Text ein.');
+                return;
+            }
+            
+            processTextBtn.innerHTML = '<svg class="animate-spin h-5 w-5 mr-2 text-white inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>Verarbeite…';
+            processTextBtn.disabled = true;
+            
+            // Submit raw text to the new endpoint
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/upload_text';
+            
+            const textInput = document.createElement('textarea');
+            textInput.name = 'raw_text';
+            textInput.value = text;
+            textInput.style.display = 'none';
+            
+            form.appendChild(textInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+        
+        // Paste event handler for file upload
+        document.addEventListener('paste', function(e) {
+            // Only handle paste if we're on the file tab
+            const fileContent = document.getElementById('file-content');
+            if (fileContent.style.display !== 'block') return;
+            
+            // Check if there are files in clipboard
+            const items = e.clipboardData.items;
+            let file = null;
+            
+            for (let i = 0; i <items.length; i++) {
+                if (items[i].type.indexOf('image') !== -1 || 
+                    items[i].type === 'application/pdf' ||
+                    items[i].type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                    items[i].type === 'application/msword' ||
+                    items[i].type === 'text/plain') {
+                    file = items[i].getAsFile();
+                    break;
+                }
+            }
+            
+            if (file) {
+                // Create a new FileList containing the pasted file
+                const dataTransfer = new DataTransfer();
+                dataTransfer.items.add(file);
+                fileInput.files = dataTransfer.files;
+                
+                // Update the UI
+                const dropZone = document.getElementById('drop-zone');
+                const uploadIcon = dropZone.querySelector('.w-12');
+                const uploadTextPrimary = dropZone.querySelector('.font-medium');
+                const uploadTextSecondary = dropZone.querySelector('.text-sm.text-gray-500');
+                
+                uploadIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+                uploadTextPrimary.textContent = 'Datei eingefügt: ' + file.name;
+                uploadTextSecondary.textContent = 'Klicken Sie auf "Hochladen", um fortzufahren';
+                dropZone.style.borderColor = '#3b82f6';
+                dropZone.style.borderWidth = '2px';
+                dropZone.style.borderStyle = 'solid';
+                dropZone.classList.remove('ring-2', 'ring-green-500', 'border-green-500');
+                uploadBtn.style.display = 'block';
+                
+                e.preventDefault();
+            }
+        });
+        
+        // Handle drag over
+        document.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        });
+        
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                const file = e.target.files[0];
+                const dropZone = document.getElementById('drop-zone');
+                const uploadIcon = dropZone.querySelector('.w-12');
+                const uploadTextPrimary = dropZone.querySelector('.font-medium');
+                const uploadTextSecondary = dropZone.querySelector('.text-sm.text-gray-500');
+                
+                uploadIcon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>';
+                uploadTextPrimary.textContent = 'Ausgewählt: ' + file.name;
+                uploadTextSecondary.textContent = 'Bereit zum Hochladen';
+                dropZone.style.borderColor = '#3b82f6';
+                dropZone.style.borderWidth = '2px';
+                dropZone.style.borderStyle = 'solid';
+                uploadBtn.style.display = 'block';
+            }
+        });
+    });
+    </script>
+    
+    <!-- Footer -->
+    <footer class="fixed bottom-0 left-0 right-0 bg-black text-white py-2 px-4">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-3 text-xs">
+            <span class="text-gray-400">&copy; 2025 GRVITY GmbH</span>
+            <div class="flex items-center gap-3">
+                <a href="https://anymize.ai/impressum" target="_blank" class="hover:underline">Impressum</a>
+                <a href="https://anymize.ai/datenschutz" target="_blank" class="hover:underline">Datenschutzerklärung</a>
+                <a href="https://anymize.ai/agb" target="_blank" class="hover:underline">Allgemeine Geschäftsbedingungen</a>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

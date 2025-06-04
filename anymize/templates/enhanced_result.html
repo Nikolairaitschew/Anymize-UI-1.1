@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>anymize.ai - ihre Anfrage wird sicher bearbeitet</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.6.0/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Font Awesome für Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css" />
+  <style>
+    :root {
+      /* Force black and white only */
+      --color-primary: #000000;
+      --color-secondary: #000000;
+      --color-background: #ffffff;
+    }
+    
+    body {
+      background-color: white;
+      color: black;
+      margin: 0;
+      padding: 0;
+      padding-bottom: 40px; /* Space for footer */
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .navbar {
+      background-color: white;
+      border-bottom: 1px solid black;
+      padding: 0.5rem 1rem;
+    }
+    
+    .btn {
+      background-color: black;
+      color: white;
+      border: 1px solid black;
+    }
+    
+    .btn:hover {
+      background-color: white;
+      color: black;
+      border: 1px solid black;
+    }
+    
+    .btn-outline {
+      background-color: white;
+      color: black;
+      border: 1px solid black;
+    }
+    
+    .btn-outline:hover {
+      background-color: black;
+      color: white;
+    }
+    
+    .card {
+      background-color: white;
+      border: 1px solid black;
+      margin-bottom: 1rem;
+    }
+    
+    pre {
+      background-color: white;
+      border: 1px solid black;
+      padding: 0.75rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      width: 100%;
+      margin: 0;
+      font-size: 0.875rem;
+    }
+    
+    .text-container {
+      height: 40vh;
+      min-height: 200px;
+      max-height: 400px;
+      overflow-y: auto;
+      border: 1px solid black;
+      padding: 0.75rem;
+      margin-bottom: 0.5rem;
+      user-select: text;
+    }
+
+    /* Anpassungen für kleine Bildschirme */
+    @media (max-width: 768px) {
+      .text-container {
+        height: 30vh;
+      }
+    }
+
+    /* Anpassungen für mobile Ansicht */
+    @media (max-width: 640px) {
+      .text-container {
+        height: 25vh;
+      }
+    }
+
+    .main-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    /* Popup for anonymization */
+    .anonymization-popup {
+      position: absolute;
+      background-color: white;
+      border: 1px solid black;
+      padding: 0.5rem;
+      border-radius: 0.25rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      display: none;
+      z-index: 1000;
+      min-width: 200px;
+    }
+
+    .anonymization-popup select {
+      width: 100%;
+      padding: 0.25rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid black;
+      background-color: white;
+      color: black;
+    }
+
+    .anonymization-popup input[type="text"] {
+      width: 100%;
+      padding: 0.25rem;
+      margin-bottom: 0.5rem;
+      border: 1px solid black;
+      background-color: white;
+      color: black;
+    }
+
+    .anonymization-popup button {
+      width: 100%;
+      padding: 0.25rem 0.5rem;
+      background-color: black;
+      color: white;
+      border: 1px solid black;
+      cursor: pointer;
+      font-size: 0.875rem;
+    }
+
+    .anonymization-popup button:hover {
+      background-color: white;
+      color: black;
+    }
+
+    .anonymization-popup .close-btn {
+      position: absolute;
+      top: 0.25rem;
+      right: 0.25rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+      width: auto;
+      padding: 0;
+      color: black;
+    }
+
+    .processing-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    
+    .processing-overlay .content {
+      background: white;
+      padding: 2rem;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+    
+    /* Ultra-minimalist loading animation */
+    #status-message {
+      background: transparent;
+      color: black;
+      border: none;
+      border-radius: 0;
+      padding: 1rem 0;
+      box-shadow: none;
+      display: inline-block;
+      font-weight: 400;
+      font-size: 1.1rem;
+      position: relative;
+      letter-spacing: 0.1em;
+    }
+    
+    /* Clean text animation with typing effect */
+    .loading-text {
+      display: inline-block;
+      position: relative;
+      font-family: 'Courier New', monospace;
+    }
+    
+    .loading-text::after {
+      content: '';
+      position: absolute;
+      right: -2px;
+      top: 0;
+      height: 100%;
+      width: 2px;
+      background-color: black;
+      animation: blink 1s steps(2) infinite;
+    }
+    
+    @keyframes blink {
+      0% { opacity: 1; }
+      50% { opacity: 0; }
+      100% { opacity: 1; }
+    }
+    
+    /* Subtle progress indicator */
+    #status-message::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      height: 1px;
+      background-color: black;
+      animation: loading-line 2s ease-in-out infinite;
+    }
+    
+    @keyframes loading-line {
+      0% {
+        width: 0%;
+        left: 0;
+      }
+      50% {
+        width: 100%;
+        left: 0;
+      }
+      100% {
+        width: 0%;
+        left: 100%;
+      }
+    }
+    
+    /* Remove old styles */
+    .loading-dots {
+      display: none;
+    }
+    
+    #status-message i {
+      display: none;
+    }
+    
+    #status-message span.status-text {
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Error message styling */
+    #error-message {
+      background: #fee;
+      color: #c33;
+      border: 1px solid #fcc;
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    
+    /* Text selection styling */
+    ::selection {
+      background-color: black;
+      color: white;
+    }
+    
+    ::-moz-selection {
+      background-color: black;
+      color: white;
+    }
+    
+    #output-text::selection {
+      background-color: black;
+      color: white;
+    }
+    
+    #output-text::-moz-selection {
+      background-color: black;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="flex-1">
+      <a href="/" class="text-xl font-bold">
+        <img src="{{ url_for('static', filename='anymize-logo.svg') }}" alt="anymize.ai" class="h-8">
+      </a>
+    </div>
+    <div class="flex-none">
+      {% if current_user %}
+        <span class="text-sm mr-4">{{ current_user.email }}</span>
+      {% endif %}
+      <a href="{{ url_for('auth_logout') }}" class="btn btn-sm">
+        <i class="fas fa-sign-out-alt mr-1"></i>Abmelden
+      </a>
+    </div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <div class="alert border border-black mb-3">{{ message | e }}</div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
+  <div class="main-container">
+    <div class="card">
+      <div class="card-body p-4">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="card-title text-xl m-0">
+            <i class="fas fa-file-alt mr-2"></i>Ihre Anfrage wird bearbeitet...
+          </h2>
+        </div>
+        
+        <div id="status-message" class="alert border border-black mb-3" {% if not processing %}style="display:none"{% endif %}>
+          <span class="status-text loading-text">Text wird verarbeitet...</span>
+        </div>
+        <div id="error-message" class="alert border-red-500 text-red-700 mb-3" style="display:none"></div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Left column: Extracted Text -->
+          <div>
+            <h3 class="font-semibold mb-1 flex items-center">
+              <i class="fas fa-file-import mr-2"></i>Extrahierter Text:
+            </h3>
+            <div class="text-container" id="input-text-container">
+              <pre id="input-text">{{ input_text | e }}</pre>
+            </div>
+            <div class="flex justify-end mt-1">
+              <a href="/download/original/{{ job_id }}" class="btn btn-sm" {% if processing %}disabled{% endif %}>
+                <i class="fas fa-download mr-1"></i>Als Text herunterladen
+              </a>
+            </div>
+          </div>
+          
+          <!-- Right column: Anonymized Text -->
+          <div>
+            <h3 class="font-semibold mb-1 flex items-center">
+              <i class="fas fa-user-shield mr-2"></i>Anonymisierter Text:
+            </h3>
+            <div class="text-container" id="output-text-container">
+              <pre id="output-text" data-has-content="{{ 'true' if output_text else 'false' }}">{{ (output_text if output_text else 'Einen wenig Geduld bitte, der Text wird hier gleich erscheinen...') | e }}</pre>
+            </div>
+            <div class="flex justify-between mt-1">
+              <div></div>
+              <div class="flex space-x-2">
+                <a href="/download/text/{{ job_id }}" class="btn btn-sm" {% if processing or not output_text %}disabled{% endif %}>
+                  <i class="fas fa-file-alt mr-1"></i>Text
+                </a>
+                <a href="/download/docx/{{ job_id }}" class="btn btn-sm" download="anonymized_{{ job_id }}.docx" {% if processing or not output_text %}disabled{% endif %}>
+                  <i class="fas fa-file-word mr-1"></i>DOCX
+                </a>
+                <a href="/download/pdf/{{ job_id }}" class="btn btn-sm" download="anonymized_{{ job_id }}.pdf" {% if processing or not output_text %}disabled{% endif %}>
+                  <i class="fas fa-file-pdf mr-1"></i>PDF
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div class="mt-4 flex justify-end">
+          <a href="/" class="btn btn-sm">
+            <i class="fas fa-arrow-left mr-1"></i>Zurück zum Upload
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Anonymization popup -->
+  <div class="anonymization-popup" id="anonymization-popup">
+    <button class="close-btn" onclick="closeAnonymizationPopup()">×</button>
+    <h4 style="margin: 0 0 0.5rem 0; font-size: 0.875rem; font-weight: bold;">Text anonymisieren</h4>
+    <select id="category-select" onchange="updateCustomCategoryInput()">
+      <option value="">Kategorie wählen...</option>
+      <option value="PERSON">Person</option>
+      <option value="ORGANIZATION">Organisation</option>
+      <option value="LOCATION">Ort</option>
+      <option value="DATE">Datum</option>
+      <option value="EMAIL">E-Mail</option>
+      <option value="PHONE">Telefonnummer</option>
+      <option value="CUSTOM">Benutzerdefiniert</option>
+    </select>
+    <input type="text" id="custom-category-input" placeholder="Eigene Kategorie eingeben..." style="display: none; margin-top: 0.5rem; width: 100%; padding: 0.25rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.875rem;">
+    <button onclick="anonymizeFurtherText()">Anonymisieren</button>
+  </div>
+
+  <!-- Processing overlay -->
+  <div class="processing-overlay" id="processing-overlay">
+    <div class="content">
+      <i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 1rem;"></i>
+      <p>Text wird anonymisiert...</p>
+    </div>
+  </div>
+  
+  <script>
+    /* eslint-disable */
+    const jobId = {{ job_id | tojson }};
+    const isProcessing = {{ processing | tojson }};
+    const webhookUrl = '{{ further_anonymization_webhook_url }}';
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      const outputTextElement = document.getElementById('output-text');
+      const statusText = document.querySelector('.status-text');
+      const popup = document.getElementById('anonymization-popup');
+      let selectedText = '';
+      let selectedRange = null;
+      const anonymizationPopup = document.getElementById('anonymization-popup');
+      const processingOverlay = document.getElementById('processing-overlay');
+      
+      // Simple notification function
+      function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          padding: 15px 20px;
+          background-color: ${type === 'error' ? '#f44336' : '#4CAF50'};
+          color: white;
+          border-radius: 4px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+          z-index: 10001;
+          animation: slideIn 0.3s ease-out;
+        `;
+        notification.textContent = message;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          notification.style.animation = 'slideOut 0.3s ease-out';
+          setTimeout(() => notification.remove(), 300);
+        }, 3000);
+      }
+      
+      // Add animation styles
+      if (!document.getElementById('notification-styles')) {
+        const style = document.createElement('style');
+        style.id = 'notification-styles';
+        style.textContent = `
+          @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+          @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+      
+      // Handle text selection in anonymized text
+      outputTextElement.addEventListener('mouseup', function(e) {
+        const selection = window.getSelection();
+        selectedText = selection.toString().trim();
+        
+        // Check if we have actual anonymized text (not placeholder)
+        const currentText = outputTextElement.textContent.trim();
+        if (currentText === 'Einen wenig Geduld bitte, der Text wird hier gleich erscheinen...' || 
+            currentText === '' || 
+            !currentText) {
+          console.log('Text selection disabled - no anonymized text available yet');
+          return;
+        }
+        
+        if (selectedText) {
+          console.log('Selected text:', selectedText);  // Debug output
+          
+          // Store the selected range
+          selectedRange = selection.getRangeAt(0);
+          
+          // Position popup near the selection
+          const rect = selectedRange.getBoundingClientRect();
+          anonymizationPopup.style.top = (rect.bottom + window.scrollY + 10) + 'px';
+          anonymizationPopup.style.left = (rect.left + window.scrollX) + 'px';
+          anonymizationPopup.style.display = 'block';
+          
+          // Reset category selection
+          document.getElementById('category-select').value = '';
+        }
+      });
+      
+      // Close popup when clicking outside
+      document.addEventListener('click', function(e) {
+        if (!anonymizationPopup.contains(e.target) && !outputTextElement.contains(e.target)) {
+          closeAnonymizationPopup();
+        }
+      });
+      
+      // Close anonymization popup function
+      window.closeAnonymizationPopup = function(keepSelection = false) {
+        anonymizationPopup.style.display = 'none';
+        
+        // Reset category selection and custom input
+        document.getElementById('category-select').value = '';
+        document.getElementById('custom-category-input').value = '';
+        document.getElementById('custom-category-input').style.display = 'none';
+        
+        if (!keepSelection) {
+          // Clear the selection
+          selectedText = '';
+          selectedRange = null;
+          window.getSelection().removeAllRanges();
+        }
+      };
+      
+      // Update custom category input field
+      window.updateCustomCategoryInput = function() {
+        const categorySelect = document.getElementById('category-select');
+        const customCategoryInput = document.getElementById('custom-category-input');
+        
+        if (categorySelect.value === 'CUSTOM') {
+          customCategoryInput.style.display = 'block';
+          customCategoryInput.focus();
+        } else {
+          customCategoryInput.style.display = 'none';
+          customCategoryInput.value = '';
+        }
+      }
+      
+      // Function to anonymize further text
+      window.anonymizeFurtherText = async function() {
+        const categorySelect = document.getElementById('category-select');
+        const customCategoryInput = document.getElementById('custom-category-input');
+        const category = categorySelect.value === 'CUSTOM' ? customCategoryInput.value : categorySelect.value;
+        const processingOverlay = document.getElementById('processing-overlay');
+        
+        // Store the selected text in a local variable before any operations
+        const textToAnonymize = selectedText;
+        const rangeToReplace = selectedRange;
+        
+        console.log('Text to anonymize:', textToAnonymize);  // Debug output
+        
+        if (!textToAnonymize) {
+          console.log('Bitte wählen Sie zuerst einen Text aus.');
+          return;
+        }
+        
+        if (!category) {
+          console.log('Bitte wählen Sie eine Kategorie aus.');
+          return;
+        }
+        
+        // For custom category, ensure it's not empty
+        if (categorySelect.value === 'CUSTOM' && !category.trim()) {
+          console.log('Bitte geben Sie eine eigene Kategorie ein.');
+          return;
+        }
+        
+        console.log('Anonymizing text:', textToAnonymize, 'with category:', category, 'for job_id:', jobId);  // Debug output
+        
+        // Close popup (keep selection for now) and show processing overlay
+        closeAnonymizationPopup(true);
+        processingOverlay.style.display = 'flex';
+        
+        try {
+          // Send request to n8n webhook
+          const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              job_id: jobId,
+              selected_text: textToAnonymize,
+              category: category
+            })
+          });
+          
+          console.log('Response status:', response.status);  // Debug output
+          
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          
+          const data = await response.json();
+          console.log('Response data:', data);  // Debug output
+          console.log('Response type:', typeof data);
+          console.log('Is array?:', Array.isArray(data));
+          
+          // Handle array response (webhook returns an array)
+          let responseData = data;
+          if (Array.isArray(data) && data.length > 0) {
+            responseData = data[0];
+            console.log('Using first element of array:', responseData);
+          }
+          
+          if (responseData) {
+            console.log('Response keys:', Object.keys(responseData));
+          }
+          
+          // Check if this is an error response (only contains 'message' field)
+          if (responseData && Object.keys(responseData).length === 1 && responseData.message) {
+            console.error('Webhook returned error message:', responseData.message);
+            throw new Error(responseData.message || 'Unbekannter Fehler vom Webhook');
+          }
+          
+          // Update the text with the new anonymized version - check various field names
+          let updatedText = null;
+          
+          // Try to find the text in various possible fields
+          if (responseData) {
+            if (responseData.output_text !== undefined && responseData.output_text !== null) {
+              updatedText = responseData.output_text;
+              console.log('Using output_text field');
+            } else if (responseData.full_prefix_text !== undefined && responseData.full_prefix_text !== null) {
+              updatedText = responseData.full_prefix_text;
+              console.log('Using full_prefix_text field');
+            } else if (responseData.text !== undefined && responseData.text !== null) {
+              updatedText = responseData.text;
+              console.log('Using text field');
+            } else if (responseData.result !== undefined && responseData.result !== null) {
+              updatedText = responseData.result;
+              console.log('Using result field');
+            } else if (responseData.anonymized_text !== undefined && responseData.anonymized_text !== null) {
+              updatedText = responseData.anonymized_text;
+              console.log('Using anonymized_text field');
+            } else if (typeof responseData === 'string') {
+              // Maybe the response is just a string
+              updatedText = responseData;
+              console.log('Response is a plain string');
+            }
+          }
+          
+          if (updatedText) {
+            outputTextElement.textContent = updatedText;
+            console.log('Anonymized text loaded successfully!');
+          } else {
+            const fields = responseData ? Object.keys(responseData).join(', ') : 'keine';
+            console.error('Kein Textfeld gefunden. Verfügbare Felder:', fields);
+            console.error('Vollständige Antwort:', JSON.stringify(data));
+            throw new Error('Kein Textfeld in der Webhook-Antwort gefunden. Verfügbare Felder: ' + fields);
+          }
+          
+          // Hide processing overlay
+          processingOverlay.style.display = 'none';
+          
+          // Clear selection after successful update
+          selectedText = '';
+          selectedRange = null;
+          window.getSelection().removeAllRanges();
+          
+        } catch (error) {
+          console.error('Error:', error);
+          processingOverlay.style.display = 'none';
+          console.log('Fehler beim Anonymisieren: ' + error.message);
+          
+          // Clear selection on error too
+          selectedText = '';
+          selectedRange = null;
+          window.getSelection().removeAllRanges();
+        }
+      };
+      
+      function pollJobStatus() {
+        fetch(`/result_ajax?job_id=${jobId}`, {
+          headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+          }
+        })
+          .then(response => response.json())
+          .then(data => {
+            if(data.error){
+              errorMessage.innerText = data.error;
+              errorMessage.style.display = 'block';
+              statusMessage.style.display = 'none';
+              clearInterval(pollingInterval);
+              return;
+            }
+            // Update input text if available
+            if (data.input_text && data.input_text.trim() !== '' && inputTextElement.textContent.trim() === '') {
+              inputTextElement.textContent = data.input_text;
+            }
+            
+            // Check if processing is complete
+            if (data.output_text && data.output_text.trim() !== '') {
+              // Update output text
+              outputTextElement.textContent = data.output_text;
+              
+              // Enable download buttons
+              document.querySelectorAll('a.btn.btn-sm[disabled]').forEach(btn => btn.removeAttribute('disabled'));
+              
+              // Stop polling
+              clearInterval(pollingInterval);
+              statusMessage.style.display = 'none';
+            }
+          })
+          .catch(error => {
+            console.error('Error polling job status:', error);
+            errorMessage.innerText = 'Fehler beim Abrufen des Status';
+            errorMessage.style.display = 'block';
+            statusMessage.style.display = 'none';
+            clearInterval(pollingInterval);
+          });
+      }
+      
+      // Start polling if processing is active
+      let pollingInterval;
+      if (isProcessing) {
+        // Initial poll immediately
+        pollJobStatus();
+        
+        // Continue polling every 3 seconds
+        pollingInterval = setInterval(pollJobStatus, 3000);
+      }
+      
+      // Check if we're waiting for anonymized text and set up auto-refresh
+      const hasContent = outputTextElement.getAttribute('data-has-content') === 'true';
+      console.log('Checking if auto-refresh needed. Has content:', hasContent);
+      console.log('Output text element:', outputTextElement);
+      console.log('Job ID:', jobId);
+      
+      if (!hasContent) {
+        console.log('No anonymized text yet, setting up auto-refresh...');
+        
+        // Poll every 2 seconds to check if text is ready
+        const checkInterval = setInterval(async function() {
+          try {
+            console.log('Polling for job status...');
+            const response = await fetch(`/result_ajax?job_id=${jobId}`);
+            console.log('Response status:', response.status);
+            if (response.ok) {
+              const data = await response.json();
+              console.log('Job data:', data);
+              console.log('Status:', data.status);
+              console.log('Output text exists:', !!data.output_text);
+              console.log('Output text length:', data.output_text ? data.output_text.length : 0);
+              
+              // Check if we have output text, regardless of status
+              if (data.output_text && data.output_text.trim() !== '') {
+                console.log('Anonymized text found! Updating page...');
+                // Update the text
+                outputTextElement.textContent = data.output_text;
+                outputTextElement.setAttribute('data-has-content', 'true');
+                
+                // Hide loading message/animation if it exists
+                const statusMessage = document.getElementById('status-message');
+                if (statusMessage) {
+                  statusMessage.style.display = 'none';
+                }
+                
+                // Stop polling
+                clearInterval(checkInterval);
+                console.log('Anonymized text loaded successfully');
+                
+                // Enable download buttons
+                document.querySelectorAll('a[disabled]').forEach(link => {
+                  if (link.href && link.href.includes('/download/')) {
+                    link.removeAttribute('disabled');
+                  }
+                });
+                
+                // Also check for buttons that might be disabled
+                document.querySelectorAll('a.btn.btn-sm[disabled]').forEach(btn => {
+                  btn.removeAttribute('disabled');
+                });
+                
+                // Show success notification
+                console.log('Auto-reload successful! Text has been updated.');
+              } else {
+                console.log('No output text yet, continuing to poll...');
+              }
+            } else {
+              console.error('Response not ok:', response.status, response.statusText);
+            }
+          } catch (error) {
+            console.error('Error checking job status:', error);
+          }
+        }, 2000);
+      }
+      
+      // Scroll synchronization
+      const inputContainer = document.getElementById('input-text-container');
+      const outputContainer = document.getElementById('output-text-container');
+      
+      function setupScrollSync() {
+        let syncing = false;
+        
+        function syncScroll(source, target) {
+          if (syncing) return;
+          syncing = true;
+          
+          const scrollPercentage = source.scrollTop / (source.scrollHeight - source.clientHeight);
+          target.scrollTop = scrollPercentage * (target.scrollHeight - target.clientHeight);
+          
+          setTimeout(() => { syncing = false; }, 10);
+        }
+        
+        inputContainer.addEventListener('scroll', () => {
+          syncScroll(inputContainer, outputContainer);
+        });
+        
+        outputContainer.addEventListener('scroll', () => {
+          syncScroll(outputContainer, inputContainer);
+        });
+      }
+      
+      // Initialize scroll sync
+      setupScrollSync();
+    });
+  </script>
+  
+  <!-- Footer -->
+  <footer class="fixed bottom-0 left-0 right-0 bg-black text-white py-2 px-4 z-50">
+    <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-3 text-xs">
+      <span class="text-gray-400">&copy; 2025 GRVITY GmbH</span>
+      <div class="flex items-center gap-3">
+        <a href="https://anymize.ai/impressum" target="_blank" class="hover:underline">Impressum</a>
+        <a href="https://anymize.ai/datenschutz" target="_blank" class="hover:underline">Datenschutzerklärung</a>
+        <a href="https://anymize.ai/agb" target="_blank" class="hover:underline">Allgemeine Geschäftsbedingungen</a>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anonymization Result</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.6.0/dist/full.min.css" rel="stylesheet" type="text/css" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root {
+      /* Force black and white only */
+      --color-primary: #000000;
+      --color-secondary: #000000;
+      --color-background: #ffffff;
+    }
+    
+    body {
+      background-color: white;
+      color: black;
+    }
+    
+    .navbar {
+      background-color: white;
+      border-bottom: 1px solid black;
+    }
+    
+    .btn {
+      background-color: black;
+      color: white;
+      border: 1px solid black;
+    }
+    
+    .btn:hover {
+      background-color: white;
+      color: black;
+      border: 1px solid black;
+    }
+    
+    .btn-outline {
+      background-color: white;
+      color: black;
+      border: 1px solid black;
+    }
+    
+    .btn-outline:hover {
+      background-color: black;
+      color: white;
+    }
+    
+    .card {
+      background-color: white;
+      border: 1px solid black;
+    }
+    
+    pre {
+      background-color: white;
+      border: 1px solid black;
+      padding: 1rem;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      width: 100%;
+    }
+    
+    .alert {
+      background-color: white;
+      border: 1px solid black;
+      color: black;
+    }
+  </style>
+</head>
+<body>
+  <div class="navbar">
+    <div class="flex-1">
+      <a href="/" class="text-xl font-bold">anymize.ai</a>
+    </div>
+    <div class="flex-none">
+      <a href="/swagger" target="_blank" class="btn btn-outline btn-sm">API Documentation</a>
+    </div>
+  </div>
+
+  <div class="container mx-auto p-4 max-w-3xl">
+    <div class="card shadow-xl mb-6">
+      <div class="card-body">
+        <h1 class="card-title text-2xl">Anonymized Text</h1>
+        <p class="text-sm">ID: {{ job_id }}</p>
+        
+        {% if output_text %}
+        <div class="mt-4">
+          <h2 class="font-semibold mb-2">Anonymized Text:</h2>
+          <pre>{{ output_text }}</pre>
+        </div>
+        
+        <div class="alert mt-6">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <div>
+            <div class="font-semibold">Note:</div>
+            <div class="text-sm">Sensitive data has been replaced with codes. Example: <code class="bg-white px-1 border border-black rounded">FN_a1b2c3d4</code> (FN = First Name)</div>
+          </div>
+        </div>
+        {% else %}
+        <div class="alert">
+          <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+          <span>Text is still being processed. The page will refresh automatically when the result is available.</span>
+        </div>
+        <script>
+          // Automatic refresh every 5 seconds if no result is available
+          setTimeout(function() {
+            window.location.reload();
+          }, 5000);
+        </script>
+        {% endif %}
+        
+        <div class="card-actions justify-end mt-4">
+          <a href="/" class="btn">Back to Upload</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

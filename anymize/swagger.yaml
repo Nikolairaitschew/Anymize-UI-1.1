@@ -1,0 +1,108 @@
+openapi: 3.0.1
+info:
+  title: Anymize API
+  version: 1.0.0
+  description: |
+    API for text and file anonymization. Accepts either raw text or file upload and returns anonymized text, prompts, and handling instructions in German and English.
+servers:
+  - url: https://explore.anymize.ai/api
+paths:
+  /anonymize:
+    post:
+      summary: Anonymize text or document
+      description: >
+        Accepts a raw text string (JSON) or a file upload (multipart/form-data) and returns anonymized text and prompts.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: Text to anonymize
+              required:
+                - text
+            examples:
+              sampleText:
+                summary: Example text
+                value:
+                  text: Max Mustermann arbeitet bei Contoso GmbH und wohnt in der Musterstraße 1, 12345 Berlin.
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File to anonymize (PDF, DOCX, TXT)
+            encoding:
+              file:
+                contentType: application/pdf, application/vnd.openxmlformats-officedocument.wordprocessingml.document, text/plain
+            examples:
+              sampleFile:
+                summary: Example file upload
+                value:
+                  file: "(binary file)"
+      responses:
+        '200':
+          description: Anonymization successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  job_id:
+                    type: string
+                  input_text:
+                    type: string
+                  output_text:
+                    type: string
+                example:
+                  job_id: "24291"
+                  input_text: "Max Mustermann ..."
+                  output_text: "Herr {%{FN-123}%} ..."
+        '400':
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          description: Job not found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '500':
+          description: Server error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /:
+    get:
+      summary: API info
+      description: Returns available API endpoints
+      responses:
+        '200':
+          description: API info
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  api_base:
+                    type: string
+                  anonymize:
+                    type: string

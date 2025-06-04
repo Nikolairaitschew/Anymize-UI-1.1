@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code eingeben - anymize.ai</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.10/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9ecef 100%);
+            min-height: 100vh;
+        }
+        .upload-container { 
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .code-input {
+            background-color: #f8f9fa !important;
+            color: #212529 !important;
+            font-weight: 600 !important;
+            font-size: 1.875rem !important;
+            text-align: center !important;
+            border: 2px solid #e9ecef !important;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            letter-spacing: 0.1em;
+        }
+        .code-input:focus {
+            background-color: #fff !important;
+            border-color: #000 !important;
+            outline: none !important;
+            box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.08) !important;
+            transform: scale(1.05);
+        }
+        .code-input:hover:not(:focus) {
+            border-color: #adb5bd !important;
+        }
+        .submit-button {
+            background: linear-gradient(135deg, #212529 0%, #343a40 100%);
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        .submit-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px -5px rgba(0, 0, 0, 0.25);
+        }
+        .submit-button:active {
+            transform: translateY(0);
+        }
+        .logo {
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1));
+        }
+        .email-badge {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col pb-16">
+    <!-- Main Content -->
+    <div class="flex-1 flex items-center justify-center p-6">
+        <div class="upload-container bg-white max-w-lg w-full p-10 rounded-2xl">
+            <header class="text-center mb-8">
+                <img src="{{ url_for('static', filename='anymize-logo.svg') }}" alt="anymize.ai" class="h-12 mx-auto mb-6 logo">
+                <h1 class="text-3xl font-bold text-gray-900 mb-4">6-stelligen Code eingeben</h1>
+                <p class="text-gray-600 text-base leading-relaxed">
+                    Wenn Sie bereits ein Konto mit uns haben, dann wurde ein Bestätigungscode an Sie gesendet.
+                </p>
+                <div class="mt-4 inline-flex items-center gap-3 email-badge px-4 py-2 rounded-full">
+                    <span class="font-medium text-gray-800">{{ email }}</span>
+                    <a href="{{ url_for('auth_login') }}" class="text-blue-600 hover:text-blue-700 hover:underline text-sm font-medium transition-colors">Ändern</a>
+                </div>
+            </header>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="mb-6 p-4 rounded-xl {% if category == 'error' %}bg-red-50 border border-red-200 text-red-700{% else %}bg-green-50 border border-green-200 text-green-700{% endif %} animate-fade-in">
+                            <div class="flex items-center gap-2">
+                                {% if category == 'error' %}
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                    </svg>
+                                {% else %}
+                                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                                    </svg>
+                                {% endif %}
+                                <span>{{ message | e }}</span>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <form method="POST" action="{{ url_for('auth_verify') }}" id="verifyForm">
+                <div class="mb-8">
+                    <label for="code" class="block text-sm font-semibold text-gray-700 mb-6 text-center">
+                        Code eingeben
+                    </label>
+                    <div class="flex justify-center gap-3 mb-8">
+                        <!-- 6 separate input boxes with improved styling -->
+                        <input type="text" maxlength="1" class="code-input w-14 h-16 rounded-xl" data-index="0" autofocus>
+                        <input type="text" maxlength="1" class="code-input w-14 h-16 rounded-xl" data-index="1">
+                        <input type="text" maxlength="1" class="code-input w-14 h-16 rounded-xl" data-index="2">
+                        <input type="text" maxlength="1" class="code-input w-14 h-16 rounded-xl" data-index="3">
+                        <input type="text" maxlength="1" class="code-input w-14 h-16 rounded-xl" data-index="4">
+                        <input type="text" maxlength="1" class="code-input w-14 h-16 rounded-xl" data-index="5">
+                    </div>
+                    <!-- Hidden input to store the complete code -->
+                    <input type="hidden" name="code" id="codeInput">
+                </div>
+
+                <button type="submit" class="submit-button w-full text-white py-4 px-6 rounded-xl font-semibold text-base">
+                    Code bestätigen
+                </button>
+            </form>
+
+            <div class="mt-8 text-center">
+                <p class="text-sm text-gray-500 leading-relaxed">
+                    Haben Sie die E-Mail nicht erhalten? Überprüfen Sie Ihren Spam-/Junk-Ordner.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="fixed bottom-0 left-0 right-0 bg-black/95 backdrop-blur-sm text-white py-3 px-4">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-4 text-xs">
+            <span class="text-gray-400">&copy; 2025 GRVITY GmbH</span>
+            <div class="flex items-center gap-4">
+                <a href="https://anymize.ai/impressum" target="_blank" class="hover:text-gray-300 transition-colors">Impressum</a>
+                <a href="https://anymize.ai/datenschutz" target="_blank" class="hover:text-gray-300 transition-colors">Datenschutzerklärung</a>
+                <a href="https://anymize.ai/agb" target="_blank" class="hover:text-gray-300 transition-colors">Allgemeine Geschäftsbedingungen</a>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Code input handling
+        const codeInputs = document.querySelectorAll('.code-input');
+        const hiddenCodeInput = document.getElementById('codeInput');
+        const verifyForm = document.getElementById('verifyForm');
+
+        // Handle input in code boxes
+        codeInputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                const value = e.target.value;
+                
+                // Only allow numbers
+                if (!/^\d$/.test(value) && value !== '') {
+                    e.target.value = '';
+                    return;
+                }
+                
+                // Move to next input if value entered
+                if (value && index < codeInputs.length - 1) {
+                    codeInputs[index + 1].focus();
+                }
+                
+                // Update hidden input with complete code
+                updateCode();
+            });
+
+            // Handle backspace
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace') {
+                    if (!e.target.value && index > 0) {
+                        // Move to previous input if current is empty
+                        codeInputs[index - 1].focus();
+                        codeInputs[index - 1].value = '';
+                        updateCode();
+                    }
+                }
+            });
+
+            // Handle paste
+            input.addEventListener('paste', (e) => {
+                e.preventDefault();
+                const pastedData = e.clipboardData.getData('text');
+                const digits = pastedData.replace(/\D/g, '').slice(0, 6);
+                
+                digits.split('').forEach((digit, i) => {
+                    if (i < codeInputs.length) {
+                        codeInputs[i].value = digit;
+                    }
+                });
+                
+                // Focus on the last filled input or the next empty one
+                const lastFilledIndex = Math.min(digits.length, codeInputs.length) - 1;
+                if (lastFilledIndex < codeInputs.length - 1) {
+                    codeInputs[lastFilledIndex + 1].focus();
+                } else {
+                    codeInputs[lastFilledIndex].focus();
+                }
+                
+                updateCode();
+            });
+        });
+
+        // Update the hidden input with the complete code
+        function updateCode() {
+            let code = '';
+            codeInputs.forEach(input => {
+                code += input.value;
+            });
+            hiddenCodeInput.value = code;
+        }
+
+        // Handle form submission
+        verifyForm.addEventListener('submit', (e) => {
+            updateCode();
+            if (hiddenCodeInput.value.length !== 6) {
+                e.preventDefault();
+                alert('Bitte geben Sie einen vollständigen 6-stelligen Code ein.');
+            }
+        });
+    </script>
+</body>
+</html>
